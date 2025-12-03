@@ -1,39 +1,112 @@
 {
-  "address": "0xB9A6bE2E7E7d6cB9fB5e2E8e7F9cB7dE5f8A9bC1D",
+  "address": "0xcc0b343CaEd32F864B47acF585185c2c52181F6F",
   "abi": [
     {
-      "inputs": [],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
+      "type": "event",
+      "anonymous": false,
+      "name": "LogCreated",
       "inputs": [
-        { "internalType": "string", "name": "action", "type": "string" },
-        { "internalType": "string", "name": "deviceName", "type": "string" }
-      ],
-      "name": "addLog",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+        {
+          "type": "string",
+          "name": "action",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "deviceName",
+          "indexed": false
+        },
+        {
+          "type": "address",
+          "name": "user",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
     },
     {
-      "inputs": [],
-      "name": "getLogs",
-      "outputs": [
+      "type": "function",
+      "name": "addLog",
+      "constant": false,
+      "payable": false,
+      "inputs": [
         {
-          "components": [
-            { "internalType": "string", "name": "action", "type": "string" },
-            { "internalType": "string", "name": "deviceName", "type": "string" },
-            { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
-            { "internalType": "address", "name": "user", "type": "address" }
-          ],
-          "internalType": "struct DeviceLogger.Log[]",
-          "name": "",
-          "type": "tuple[]"
+          "type": "string",
+          "name": "_action"
+        },
+        {
+          "type": "string",
+          "name": "_deviceName"
         }
       ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "getLogs",
+      "constant": true,
       "stateMutability": "view",
-      "type": "function"
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "tuple[]",
+          "name": "",
+          "components": [
+            {
+              "type": "string",
+              "name": "action"
+            },
+            {
+              "type": "string",
+              "name": "deviceName"
+            },
+            {
+              "type": "address",
+              "name": "user"
+            },
+            {
+              "type": "uint256",
+              "name": "timestamp"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "logs",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": "action"
+        },
+        {
+          "type": "string",
+          "name": "deviceName"
+        },
+        {
+          "type": "address",
+          "name": "user"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        }
+      ]
     }
   ]
 }

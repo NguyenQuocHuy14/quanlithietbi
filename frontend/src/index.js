@@ -1,13 +1,20 @@
+// src/index.js  ← chính file bạn đang mở đây nè!
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App.jsx';
+import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+// THÊM 2 DÒNG NÀY – QUAN TRỌNG NHẤT
+import { BrowserRouter } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    {/* BỌC TOÀN BỘ APP VÀO BrowserRouter – CHỈ CẦN THÊM DÒNG NÀY */}
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
 

@@ -43,32 +43,35 @@ const deviceSchema = new mongoose.Schema({
 const Device = mongoose.model("Device", deviceSchema);
 
 // ================= BLOCKCHAIN – ĐÃ THAY THEO YÊU CẦU CỦA BẠN (CHẠY NGON 100%) =================
-// --- BẮT ĐẦU ĐOẠN CODE THAY THẾ TRONG SERVER.JS ---
+// ================= BLOCKCHAIN (ĐÃ FIX KEY MỚI) =================
 let contract;
 try {
   console.log("--- ĐANG KẾT NỐI BLOCKCHAIN... ---");
 
-  // 1. LINK RPC: Dùng link Public Node này là ổn định nhất, ít bị lỗi detect
-  const RPC_URL = "https://ethereum-sepolia.publicnode.com"; 
+  // 1. LINK RPC: Dùng cổng 1RPC ổn định
+  const RPC_URL = "https://1rpc.io/sepolia";
   
-  // 2. CẤU HÌNH MẠNG TĨNH (Fix triệt để lỗi "failed to detect network")
-  // Ép code nhận diện đây là Sepolia (ID 11155111) luôn, không cần hỏi mạng
+  // 2. CẤU HÌNH MẠNG TĨNH (Fix lỗi detect network)
   const staticNetwork = new ethers.Network("sepolia", 11155111n);
   const provider = new ethers.JsonRpcProvider(RPC_URL, staticNetwork, { staticNetwork: true });
   
-  // 3. VÍ (Private Key của bạn)
-  const wallet = new ethers.Wallet("0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", provider);
+  // 3. VÍ (Private Key MỚI CỦA BẠN)
+  const privateKey = "0xe2a792a0acd04b02baf3dc407fb2af1db11e525d29f228dcb2ef6a541e3416d1";
+  const wallet = new ethers.Wallet(privateKey, provider);
+  
+  // KIỂM TRA SỐ DƯ (Bỏ await, dùng .then để không bị lỗi cú pháp)
   console.log("---------------------------------------");
-console.log("👉 ĐỊA CHỈ VÍ ĐANG DÙNG:", wallet.address);
+  console.log("👉 ĐỊA CHỈ VÍ ĐANG DÙNG:", wallet.address);
 
-provider.getBalance(wallet.address).then((balance) => {
-    console.log("💰 SỐ DƯ HIỆN TẠI:", ethers.formatEther(balance), "ETH");
-}).catch((err) => {
-    console.error("❌ Lỗi khi check tiền:", err.message);
-});
-  // 4. ĐỊA CHỈ CONTRACT (QUAN TRỌNG NHẤT - ĐÃ SỬA THÀNH ĐỊA CHỈ CHUẨN CỦA BẠN)
-  const rawAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; 
-  const contractAddress = ethers.getAddress(rawAddress); // Hàm này giúp chuẩn hóa 100%
+  provider.getBalance(wallet.address).then((balance) => {
+      console.log("💰 SỐ DƯ HIỆN TẠI:", ethers.formatEther(balance), "ETH");
+  }).catch((err) => {
+      console.error("❌ Lỗi khi check tiền:", err.message);
+  });
+  
+  // 4. ĐỊA CHỈ CONTRACT (CHUẨN)
+  const rawAddress = "0xcc0b343CaEd32F864B47acF585185c2c52181F6F"; 
+  const contractAddress = ethers.getAddress(rawAddress); 
 
   // Lấy ABI từ file
   const contractPath = path.join(__dirname, "..", "blockchain", "deployedContract.json");
@@ -85,6 +88,7 @@ provider.getBalance(wallet.address).then((balance) => {
   console.error("❌ LỖI KẾT NỐI (Web vẫn chạy nhưng không có Blockchain):", err.message);
   contract = null;
 }
+// ============================================================
 // --- KẾT THÚC ĐOẠN CODE THAY THẾ ---
 // ================= API Thiết bị =================
 app.get("/api/devices", async (req, res) => {
@@ -151,39 +155,60 @@ app.get("/api/logs", async (req, res) => {
   try {
     if (!contract) return res.json([]);
 
-    // 1. Lấy số Block hiện tại
-    const currentBlock = await contract.runner.provider.getBlockNumber();
-    
-    // 2. Tính toán block bắt đầu (Chỉ lấy 40,000 block gần nhất để an toàn)
-    // Nếu contract mới deploy thì lấy từ block 0 cũng được, nhưng an toàn nhất là giới hạn lại
-    const startBlock = currentBlock - 40000; 
-    const fromBlock = startBlock > 0 ? startBlock : 0;
+    console.log("📥 Đang gọi hàm getLogs() từ Smart Contract...");
 
-    console.log(`Đang lấy logs từ block ${fromBlock} đến ${currentBlock}...`);
+    // 1. Gọi trực tiếp hàm lấy dữ liệu trong Smart Contract
+    // Hàm này trả về mảng struct Log[], không phụ thuộc vào RPC limit
+    const rawLogs = await contract.getLogs(); 
 
-    // 3. Gọi queryFilter với khoảng block cụ thể
-    // Lưu ý: Thay "*" bằng tên sự kiện nếu cần, hoặc để nguyên để lấy tất cả
-    const logs = await contract.queryFilter("*", fromBlock, currentBlock);
+    // 2. Format dữ liệu trả về
+    // Đảo ngược mảng ([...rawLogs].reverse()) để log mới nhất hiện lên đầu
+    const formattedLogs = [...rawLogs].reverse().map((log, index) => {
+      // log là một mảng/object chứa: [action, deviceName, user, timestamp]
+      return {
+        // Tạo mã giả vì đọc từ bộ nhớ không có txHash, giúp Frontend không bị lỗi key
+        txHash: `Log_${Date.now()}_${index}`, 
+        action: log.action,
+        deviceName: log.deviceName,
+        // user: log.user, // Nếu muốn hiện người dùng
+        timestamp: log.timestamp.toString() // Chuyển BigInt thành String
+      };
+    });
 
-    // 4. Xử lý dữ liệu trả về (Format)
-    const formattedLogs = logs.reverse().map(log => ({
-      txHash: log.transactionHash,
-      action: log.args?.[0] || "Unknown",
-      deviceName: log.args?.[1] || "Unknown",
-      timestamp: log.args?.[3]?.toString() || Date.now().toString()
-    }));
-
+    console.log(`✅ Đã lấy thành công ${formattedLogs.length} dòng lịch sử.`);
     res.json(formattedLogs);
 
   } catch (err) {
-    console.error("❌ LỖI API LOGS:", err.message);
-    res.json([]); // Trả về rỗng để web không bị lỗi
+    console.error("❌ LỖI LẤY LOGS:", err.message);
+    // Trả về mảng rỗng để web không bị treo
+    res.json([]); 
   }
 });
 
 // Test API
 app.get("/api/test", (req, res) => {
   res.json({ message: "Backend " });
+});
+// --- API THỐNG KÊ DASHBOARD ---
+app.get("/api/dashboard-stats", async (req, res) => {
+  try {
+    const totalDevices = await Device.countDocuments();
+    
+    // Đếm số thiết bị hết hàng (quantity = 0)
+    const outOfStock = await Device.countDocuments({ quantity: 0 });
+    
+    // Đếm số thiết bị sắp hết (quantity < 5)
+    const lowStock = await Device.countDocuments({ quantity: { $lt: 5, $gt: 0 } });
+
+    res.json({
+      total: totalDevices,
+      outOfStock,
+      lowStock,
+      active: totalDevices - outOfStock
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ================= Khởi động Server =================

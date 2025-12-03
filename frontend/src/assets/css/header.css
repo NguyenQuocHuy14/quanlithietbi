@@ -131,3 +131,21 @@
   color: white !important;
   font-weight: 600;
 }
+.header-right a {
+  color: #333;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.header-right a:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.header-right a.active {
+  background: #1976d2;
+  color: white !important;
+  font-weight: bold;
+}
