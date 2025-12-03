@@ -1,0 +1,133 @@
+.header {
+  width: 100%;
+  height: 70px;
+  padding: 0 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 23px;
+  font-weight: bold;
+  color: #1976d2;
+  white-space: nowrap;
+}
+
+/* Đây là chỗ then chốt – tự động đẩy menu sát phải mãi mãi */
+.header-right {
+  display: flex;
+  gap: 34px;           /* khoảng cách giữa các nút – đẹp nhất mắt người Việt */
+  margin-left: auto;   /* Đẩy toàn bộ menu sát mép phải */
+}
+
+.header-right a {
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 8px 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.header-right a:hover {
+  color: #1976d2;
+}
+
+.header-right a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 50%;
+  background-color: #1976d2;
+  transition: all 0.3s ease;
+}
+
+.header-right a:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+/* Responsive đẹp trên điện thoại */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 20px;
+    height: 60px;
+  }
+  .header-left {
+    font-size: 19px;
+    gap: 8px;
+  }
+  .header-right {
+    gap: 18px;
+  }
+  .header-right a {
+    font-size: 15px;
+  }
+}
+/* RESPONSIVE HOÀN HẢO CHO MỌI MÀN HÌNH */
+* {
+  box-sizing: border-box;
+}
+
+.header {
+  width: 100% !important;
+  padding: 0 40px !important;
+}
+
+.header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Responsive cho điện thoại */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 15px !important;
+    flex-direction: column;
+    text-align: center;
+  }
+  .header-right {
+    margin-top: 10px;
+  }
+  .header-right a {
+    padding: 8px 15px !important;
+    font-size: 14px;
+  }
+  h1 {
+    font-size: 2.5rem !important;
+  }
+}
+.header-right a {
+  color: #666;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.header-right a:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.header-right a.active {
+  background: #1976d2;
+  color: white !important;
+  font-weight: 600;
+}

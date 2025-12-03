@@ -1,0 +1,39 @@
+{
+  "address": "0xB9A6bE2E7E7d6cB9fB5e2E8e7F9cB7dE5f8A9bC1D",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        { "internalType": "string", "name": "action", "type": "string" },
+        { "internalType": "string", "name": "deviceName", "type": "string" }
+      ],
+      "name": "addLog",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLogs",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "string", "name": "action", "type": "string" },
+            { "internalType": "string", "name": "deviceName", "type": "string" },
+            { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+            { "internalType": "address", "name": "user", "type": "address" }
+          ],
+          "internalType": "struct DeviceLogger.Log[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
