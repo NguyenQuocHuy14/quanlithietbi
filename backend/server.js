@@ -6,14 +6,15 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 const { ethers } = require("ethers");
-
+const bcrypt = require("bcryptjs");
+const authRoutes = require("./routes/authRoutes");
 const app = express();
 
 // ================= Middleware =================
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+app.use("/api/auth", authRoutes);
 // ================= Multer – Upload ảnh =================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
