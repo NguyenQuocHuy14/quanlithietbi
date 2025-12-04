@@ -56,7 +56,27 @@ export default function DeviceList() {
       (statusFilter === "borrowed" && d.quantity === 0);
     return matchesSearch && matchesStatus;
   });
+// --- CHÈN ĐOẠN NÀY VÀO TRƯỚC const handleBorrow ---
+  const handlePredict = async (id) => {
+    try {
+      const confirmPredict = window.confirm("Hệ thống sẽ gửi dữ liệu sang AI để phân tích. Bạn có muốn tiếp tục?");
+      if (!confirmPredict) return;
 
+      const res = await axiosClient.post(`/api/predict/${id}`);
+      const data = res.data;
+
+      if (data.prediction) {
+        const date = new Date(data.prediction.predicted_date).toLocaleDateString('vi-VN');
+        const daysLeft = data.prediction.days_remaining;
+        alert(`🤖 KẾT QUẢ DỰ BÁO:\n\n📅 Ngày bảo trì: ${date}\n⏳ Còn lại: ${daysLeft} ngày.`);
+        loadDevices(); 
+      }
+    } catch (err) {
+      console.error(err);
+      alert("⚠️ Lỗi: Không thể kết nối đến AI Service!");
+    }
+  };
+  // ---------------------------------------------------
   // Hàm mượn thiết bị (giữ nguyên logic cũ + blockchain log)
   const handleBorrow = async (device) => {
     if (device.quantity <= 0) {
@@ -184,6 +204,14 @@ export default function DeviceList() {
                       </span>
                     </td>
                     <td className="col-action">
+                      {/* 👇 THÊM NÚT NÀY VÀO ĐẦU TIÊN 👇 */}
+  <button 
+    className="btn-edit" 
+    style={{ backgroundColor: '#6f42c1', color: 'white', marginRight: '5px', borderColor: '#6f42c1' }}
+    onClick={() => handlePredict(d._id)}
+  >
+    🔮 AI
+  </button>
                       <button
                         className="btn-borrow"
                         onClick={() => handleBorrow(d)}

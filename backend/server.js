@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 const { ethers } = require("ethers");
+const axios = require('axios');
 const bcrypt = require("bcryptjs");
 const authRoutes = require("./routes/authRoutes");
 const app = express();
@@ -40,6 +41,9 @@ const deviceSchema = new mongoose.Schema({
   quantity: Number,
   description: String,
   image: String,
+  usageCount: { type: Number, default: 0 }, // Số lần sử dụng
+  lastMaintenance: { type: Date, default: Date.now }, // Lần bảo trì cuối
+  nextMaintenance: Date // Kết quả dự báo sẽ lưu vào đây
 });
 const Device = mongoose.model("Device", deviceSchema);
 
@@ -136,7 +140,61 @@ app.delete("/api/devices/:id", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+// ================= API MƯỢN THIẾT BỊ (Cập nhật usageCount cho AI) =================
+app.post("/api/devices/borrow/:id", async (req, res) => {
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) return res.status(404).json({ error: "Không tìm thấy thiết bị" });
+    if (device.quantity <= 0) return res.status(400).json({ error: "Đã hết thiết bị này!" });
 
+    // 1. Giảm số lượng kho
+    device.quantity -= 1;
+    
+    // 2. TĂNG SỐ LẦN SỬ DỤNG (QUAN TRỌNG CHO DỰ BÁO)
+    device.usageCount = (device.usageCount || 0) + 1;
+
+    await device.save();
+
+    // 3. Ghi log Blockchain (Nếu kết nối thành công)
+    if (contract) {
+        try {
+            const tx = await contract.addLog("BORROW", device.name);
+            // Không await tx.wait() để phản hồi nhanh hơn
+        } catch (e) {
+            console.log("Lỗi ghi blockchain:", e.message);
+        }
+    }
+
+    res.json({ success: true, message: "Mượn thành công", device });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ================= API TRẢ THIẾT BỊ =================
+app.post("/api/devices/return/:id", async (req, res) => {
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) return res.status(404).json({ error: "Không tìm thấy thiết bị" });
+
+    // Tăng lại số lượng kho
+    device.quantity += 1;
+    await device.save();
+
+    // Ghi log Blockchain
+    if (contract) {
+        try {
+           const tx = await contract.addLog("RETURN", device.name);
+        } catch (e) {
+           console.log("Lỗi ghi blockchain:", e.message);
+        }
+    }
+
+    res.json({ success: true, message: "Trả thành công", device });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // ================= API Blockchain Logs =================
 app.post("/api/logs", async (req, res) => {
   try {
@@ -212,6 +270,39 @@ app.get("/api/dashboard-stats", async (req, res) => {
   }
 });
 
+
+// ================= API DỰ BÁO BẢO TRÌ (GỌI SANG PYTHON) =================
+app.post("/api/predict/:id", async (req, res) => {
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) return res.status(404).json({ error: "Không tìm thấy thiết bị" });
+
+    // Gọi sang AI Service (Python đang chạy ở port 5001)
+    const pythonResponse = await axios.post('http://127.0.0.1:5001/predict', {
+      usageCount: device.usageCount || 0
+    });
+
+    const predictionData = pythonResponse.data;
+
+    if (predictionData.success) {
+      // Lưu kết quả dự báo vào MongoDB
+      device.nextMaintenance = predictionData.predicted_date;
+      await device.save();
+
+      res.json({
+        message: "Dự báo thành công!",
+        device: device,
+        prediction: predictionData
+      });
+    } else {
+      res.status(500).json({ error: "Lỗi từ phía AI Service" });
+    }
+
+  } catch (err) {
+    console.error("Lỗi dự báo:", err.message);
+    res.status(500).json({ error: "Không thể kết nối tới AI Service (Hãy chắc chắn bạn đã chạy app.py)" });
+  }
+});
 // ================= Khởi động Server =================
 const PORT = 5000;
 app.listen(PORT, () => {

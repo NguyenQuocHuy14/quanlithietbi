@@ -5,9 +5,11 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import DeviceList from './pages/DeviceList';
 import History from './pages/History';
+import Prediction from "./pages/Prediction";
 import Auth from './pages/Auth'; // <--- Import trang Auth vừa tạo
 import Footer from './app/components/layout/footer/Footer';
 import Header from './app/components/layout/header/Header';
+
 
 import './assets/css/header.css';
 import './assets/css/app.css';
@@ -42,6 +44,7 @@ export default function App() {
             <Route path="/account" element={<div>Trang tài khoản</div>} />
             {/* Nếu gõ lung tung thì về trang chủ */}
             <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/prediction" element={<Prediction />} />
           </Routes>
         </div>
       </main>

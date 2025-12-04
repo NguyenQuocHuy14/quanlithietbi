@@ -37,6 +37,9 @@ function Header() {
       <nav className="header-right">
         <Link to="/" className={isActive("/")}>Trang chủ</Link>
         <Link to="/devices" className={isActive("/devices")}>Thiết bị</Link>
+        <Link to="/prediction" style={{ color: "#ffc107", fontWeight: "bold" }}>
+        🔮 Dự báo AI
+    </Link>
         <Link to="/history" className={isActive("/history")}>Lịch sử</Link>
         
         {/* Chỉ hiện Tài khoản khi đã đăng nhập */}
