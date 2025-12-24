@@ -147,19 +147,24 @@ app.post("/api/devices/borrow/:id", async (req, res) => {
     if (!device) return res.status(404).json({ error: "Không tìm thấy thiết bị" });
     if (device.quantity <= 0) return res.status(400).json({ error: "Đã hết thiết bị này!" });
 
+    // In ra màn hình console (màn hình đen) để kiểm tra
+    console.log(`[DEBUG] Trước khi mượn: ${device.name} - Usage: ${device.usageCount}`);
+
     // 1. Giảm số lượng kho
     device.quantity -= 1;
     
     // 2. TĂNG SỐ LẦN SỬ DỤNG (QUAN TRỌNG CHO DỰ BÁO)
     device.usageCount = (device.usageCount || 0) + 1;
 
+    // In ra số mới để xem nó có tăng không
+    console.log(`[DEBUG] Sau khi cộng: ${device.usageCount}`);
+
     await device.save();
 
-    // 3. Ghi log Blockchain (Nếu kết nối thành công)
+    // 3. Ghi log Blockchain
     if (contract) {
         try {
             const tx = await contract.addLog("BORROW", device.name);
-            // Không await tx.wait() để phản hồi nhanh hơn
         } catch (e) {
             console.log("Lỗi ghi blockchain:", e.message);
         }
@@ -170,6 +175,8 @@ app.post("/api/devices/borrow/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// 👆👆👆 KẾT THÚC ĐOẠN MƯỢN 👆👆👆
 
 // ================= API TRẢ THIẾT BỊ =================
 app.post("/api/devices/return/:id", async (req, res) => {

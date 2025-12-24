@@ -78,7 +78,9 @@ export default function DeviceList() {
   };
   // ---------------------------------------------------
   // Hàm mượn thiết bị (giữ nguyên logic cũ + blockchain log)
+  // Thay thế toàn bộ hàm handleBorrow cũ bằng đoạn này:
   const handleBorrow = async (device) => {
+    // 1. Kiểm tra nhanh ở Frontend
     if (device.quantity <= 0) {
       alert("Thiết bị này đã hết, không thể mượn!");
       return;
@@ -88,23 +90,19 @@ export default function DeviceList() {
     if (!confirm) return;
 
     try {
-      await axiosClient.post("/api/logs", {
-        action: "BORROW",
-        deviceName: device.name
-      });
+      // 2. GỌI API MƯỢN CHUYÊN DỤNG (POST /borrow)
+      // API này ở Backend sẽ tự làm 3 việc: Trừ kho, Tăng usageCount, Ghi log
+      const res = await axiosClient.post(`/api/devices/borrow/${device._id}`);
 
-      const formData = new FormData();
-      formData.append("name", device.name);
-      formData.append("quantity", device.quantity - 1);
-      formData.append("description", device.description || "");
-
-      await axiosClient.put(`/api/devices/${device._id}`, formData);
-
-      alert(`Mượn thành công! Đã ghi log Blockchain: BORROW - ${device.name}`);
-      loadDevices();
+      if (res.data.success) {
+        alert(`✅ Mượn thành công!\n(Số lần dùng đã được tăng lên để phục vụ dự báo AI)`);
+        loadDevices(); // Tải lại danh sách để thấy số mới
+      }
     } catch (err) {
       console.error("Lỗi mượn:", err);
-      alert("Có lỗi xảy ra khi mượn!");
+      // Hiển thị lỗi từ Backend trả về (nếu có)
+      const errorMsg = err.response?.data?.error || "Có lỗi xảy ra khi mượn!";
+      alert("❌ Lỗi: " + errorMsg);
     }
   };
 
@@ -167,6 +165,7 @@ export default function DeviceList() {
                 <th className="col-image">Hình ảnh</th>
                 <th className="col-name">Tên thiết bị</th>
                 <th className="col-desc">Mô tả</th>
+                <th className="col-usage" style={{minWidth: "100px"}}>Đã dùng</th>
                 <th className="col-quantity">Số lượng</th>
                 <th className="col-status">Trạng thái</th>
                 <th className="col-action">Hành động</th>
@@ -193,6 +192,9 @@ export default function DeviceList() {
                     </td>
                     <td className="col-name"><strong>{d.name || "-"}</strong></td>
                     <td className="col-desc">{d.description || "-"}</td>
+                    <td className="col-usage" style={{textAlign: "center", fontWeight: "bold", color: "#6f42c1"}}>
+    {d.usageCount || 0} lần
+  </td>
                     <td className="col-quantity">
                       <span className={`quantity-badge ${d.quantity === 0 ? "zero" : ""}`}>
                         {d.quantity}

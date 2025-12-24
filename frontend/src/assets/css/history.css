@@ -1,0 +1,9 @@
+.container { padding: 30px; max-width: 1200px; margin: 0 auto; }
+h1 { color: #1976d2; }
+.history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.history-table th, .history-table td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+.history-table th { background: #1976d2; color: white; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+.borrow { background: #ff9800; color: white; }
+.return { background: #4caf50; color: white; }
+.tx-link { color: #1976d2; text-decoration: underline; }
